@@ -2,7 +2,7 @@ var Jumper = cc.Sprite.extend({
     ctor: function( x, y ) {
         this._super();
         this.initWithFile( 'res/images/jumper.png' );
-
+        this.setAnchorPoint( cc.p( 0.5, 0 ) );
         this.x = x;
         this.y = y;
 
@@ -19,6 +19,10 @@ var Jumper = cc.Sprite.extend({
         this.moveRight = false;
         this.jump = false;
 
+        this.ground = null;
+
+        this.blocks = [];
+
         this.updatePosition();
     },
 
@@ -28,13 +32,48 @@ var Jumper = cc.Sprite.extend({
     },
 
     update: function() {
-        this.updateXMovement();
+        var oldRect = this.getBoundingBoxToWorld();
+        var oldX = this.x;
+        var oldY = this.y;
+        
         this.updateYMovement();
+        this.updateXMovement();
+
+        var newRect = cc.RectMake( oldRect.x + this.x - oldX,
+                                   oldRect.y + this.y - oldY - 1,
+                                   oldRect.width,
+                                   oldRect.height + 1 );
+
+        if ( this.ground ) {
+            if ( !this.ground.onTop( newRect ) ) {
+                this.ground = null;
+            }
+        } else {
+            if ( this.vy <= 0 ) {
+                var topBlock = null;
+                var topBlockY = -1;
+                
+                this.blocks.forEach( function( b ) {
+                    if ( b.hitTop( oldRect, newRect ) ) {
+                        if ( b.getTopY() > topBlockY ) {
+                            topBlockY = b.getTopY();
+                            topBlock = b;
+                        }
+                    }
+                }, this );
+                
+                if ( topBlock ) {
+                    this.ground = topBlock;
+                    this.y = topBlockY;
+                    this.vy = 0;
+                }
+            }
+        }
         this.updatePosition();
     },
 
     updateXMovement: function() {
-        if ( this.y == 200 ) {
+        if ( this.ground ) {
             if ( ( !this.moveLeft ) && ( !this.moveRight ) ) {
                 this.autoDeaccelerateX();
             } else if ( this.moveRight ) {
@@ -53,16 +92,16 @@ var Jumper = cc.Sprite.extend({
     },
 
     updateYMovement: function() {
-        if ( this.jump ) {
-            if ( this.y == 200 ) {
-                this.vy = this.jumpV;
-            }
-        }
-        this.vy += this.g;
-        this.y += this.vy;
-        if ( this.y < 200 ) {
-            this.y = 200;
+        if ( this.ground ) {
             this.vy = 0;
+            if ( this.jump ) {
+                this.vy = this.jumpV;
+                this.y = this.ground.getTopY() + this.vy;
+                this.ground = null;
+            }
+        } else {
+            this.vy += this.g;
+            this.y += this.vy;
         }
     },
     
@@ -103,6 +142,10 @@ var Jumper = cc.Sprite.extend({
         if ( Jumper.KEYMAP[ e ] != undefined ) {
             this[ Jumper.KEYMAP[ e ] ] = false;
         }
+    },
+
+    setBlocks: function( blocks ) {
+        this.blocks = blocks;
     }
 });
 
