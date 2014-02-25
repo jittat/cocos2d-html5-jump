@@ -9,10 +9,15 @@ var Jumper = cc.Sprite.extend({
         this.maxVx = 8;
         this.accX = 0.25;
         this.backAccX = 0.5;
+        this.jumpV = 20;
+        this.g = -1;
+        
         this.vx = 0;
+        this.vy = 0;
 
         this.moveLeft = false;
         this.moveRight = false;
+        this.jump = false;
 
         this.updatePosition();
     },
@@ -23,17 +28,44 @@ var Jumper = cc.Sprite.extend({
     },
 
     update: function() {
-        if ( ( !this.moveLeft ) && ( !this.moveRight ) ) {
-            this.autoDeaccelerateX();
-        } else if ( this.moveRight ) {
-            this.accelerateX( 1 );
-        } else {
-            this.accelerateX( -1 );
-        }
-        this.x += this.vx;
+        this.updateXMovement();
+        this.updateYMovement();
         this.updatePosition();
     },
 
+    updateXMovement: function() {
+        if ( this.y == 200 ) {
+            if ( ( !this.moveLeft ) && ( !this.moveRight ) ) {
+                this.autoDeaccelerateX();
+            } else if ( this.moveRight ) {
+                this.accelerateX( 1 );
+            } else {
+                this.accelerateX( -1 );
+            }
+        }
+        this.x += this.vx;
+        if ( this.x < 0 ) {
+            this.x += screenWidth;
+        }
+        if ( this.x > screenWidth ) {
+            this.x -= screenWidth;
+        }
+    },
+
+    updateYMovement: function() {
+        if ( this.jump ) {
+            if ( this.y == 200 ) {
+                this.vy = this.jumpV;
+            }
+        }
+        this.vy += this.g;
+        this.y += this.vy;
+        if ( this.y < 200 ) {
+            this.y = 200;
+            this.vy = 0;
+        }
+    },
+    
     accelerateX: function( dir ) {
         var sameDirection = (( this.vx * dir ) >= 0);
 
@@ -77,4 +109,5 @@ var Jumper = cc.Sprite.extend({
 Jumper.KEYMAP = {}
 Jumper.KEYMAP[cc.KEY.left] = 'moveLeft';
 Jumper.KEYMAP[cc.KEY.right] = 'moveRight';
+Jumper.KEYMAP[cc.KEY.up] = 'jump';
         
