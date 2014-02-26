@@ -6,9 +6,11 @@ var GameLayer = cc.LayerColor.extend({
         this.createBlocks();
 
         this.jumper = new Jumper( 400, 160 );
-        this.addChild( this.jumper );
-        this.jumper.scheduleUpdate();
         this.jumper.setBlocks( this.blocks );
+        this.addChild( this.jumper );
+        this.scheduleOnce(function() {
+            this.jumper.scheduleUpdate();
+        }, 2);
         
         this.setKeyboardEnabled( true );
 
@@ -22,11 +24,11 @@ var GameLayer = cc.LayerColor.extend({
         var groundBlock = new Block( 0, 0, 700, 160 );
         this.blocks.push( groundBlock );
 
-        var topBlock = new Block( 0, 200, 400, 250 );
-        this.blocks.push( topBlock );
+        var middleBlock = new Block( 0, 200, 400, 250 );
+        this.blocks.push( middleBlock );
 
-        var topTopBlock = new Block( 600, 370, 800, 420 );
-        this.blocks.push( topTopBlock );
+        var topBlock = new Block( 600, 400, 800, 450 );
+        this.blocks.push( topBlock );
 
         this.blocks.forEach( function( b ) {
             this.addChild( b );

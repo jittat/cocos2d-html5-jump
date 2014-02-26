@@ -39,36 +39,15 @@ var Jumper = cc.Sprite.extend({
         this.updateYMovement();
         this.updateXMovement();
 
-        var newRect = cc.RectMake( oldRect.x + this.x - oldX,
-                                   oldRect.y + this.y - oldY - 1,
-                                   oldRect.width,
-                                   oldRect.height + 1 );
+        var dX = this.x - oldX;
+        var dY = this.y - oldY;
+        
+        var newRect = cc.rect( oldRect.x + dX,
+                               oldRect.y + dY - 1,
+                               oldRect.width,
+                               oldRect.height + 1 );
 
-        if ( this.ground ) {
-            if ( !this.ground.onTop( newRect ) ) {
-                this.ground = null;
-            }
-        } else {
-            if ( this.vy <= 0 ) {
-                var topBlock = null;
-                var topBlockY = -1;
-                
-                this.blocks.forEach( function( b ) {
-                    if ( b.hitTop( oldRect, newRect ) ) {
-                        if ( b.getTopY() > topBlockY ) {
-                            topBlockY = b.getTopY();
-                            topBlock = b;
-                        }
-                    }
-                }, this );
-                
-                if ( topBlock ) {
-                    this.ground = topBlock;
-                    this.y = topBlockY;
-                    this.vy = 0;
-                }
-            }
-        }
+        this.handleCollision( oldRect, newRect );
         this.updatePosition();
     },
 
@@ -104,11 +83,14 @@ var Jumper = cc.Sprite.extend({
             this.y += this.vy;
         }
     },
-    
-    accelerateX: function( dir ) {
-        var sameDirection = (( this.vx * dir ) >= 0);
 
-        if ( sameDirection ) {
+    isSameDirection: function( dir ) {
+        return ( ( ( this.vx >=0 ) && ( dir >= 0 ) ) ||
+                 ( ( this.vx <= 0 ) && ( dir <= 0 ) ) );
+    },
+
+    accelerateX: function( dir ) {
+        if ( this.isSameDirection( dir ) ) {
             this.vx += dir * this.accX;
             if ( Math.abs( this.vx ) > this.maxVx ) {
                 this.vx = dir * this.maxVx;
@@ -130,6 +112,40 @@ var Jumper = cc.Sprite.extend({
         } else {
             this.vx += this.accX;
         }
+    },
+
+    handleCollision: function( oldRect, newRect ) {
+        if ( this.ground ) {
+            if ( !this.ground.onTop( newRect ) ) {
+                this.ground = null;
+            }
+        } else {
+            if ( this.vy <= 0 ) {
+                var topBlock = this.findTopBlock( this.blocks, oldRect, newRect );
+                
+                if ( topBlock ) {
+                    this.ground = topBlock;
+                    this.y = topBlock.getTopY();
+                    this.vy = 0;
+                }
+            }
+        }
+    },
+    
+    findTopBlock: function( blocks, oldRect, newRect ) {
+        var topBlock = null;
+        var topBlockY = -1;
+        
+        blocks.forEach( function( b ) {
+            if ( b.hitTop( oldRect, newRect ) ) {
+                if ( b.getTopY() > topBlockY ) {
+                    topBlockY = b.getTopY();
+                    topBlock = b;
+                }
+            }
+        }, this );
+        
+        return topBlock;
     },
     
     handleKeyDown: function( e ) {
