@@ -14,7 +14,11 @@ var Block = cc.Sprite.extend({
     hitTop: function( oldRect, newRect ) {
         var brect = this.getBoundingBoxToWorld();
         if ( cc.rectGetMinY( oldRect ) >= cc.rectGetMaxY( brect ) ) {
-            var uRect = cc.rectUnion( oldRect, newRect );
+            var loweredNewRect = cc.rect( newRect.x,
+                                          newRect.y - 1,
+                                          newRect.width,
+                                          newRect.height + 1 );
+            var uRect = cc.rectUnion( oldRect, loweredNewRect );
             return cc.rectIntersectsRect( uRect, brect );
         }
         return false;

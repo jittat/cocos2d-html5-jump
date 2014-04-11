@@ -23,32 +23,37 @@ var Jumper = cc.Sprite.extend({
 
         this.blocks = [];
 
-        this.updatePosition();
+        this.updateSpritePosition();
     },
 
-    updatePosition: function() {
+    updateSpritePosition: function() {
         this.setPosition( cc.p( Math.round( this.x ),
                                 Math.round( this.y ) ) );
     },
 
+    getPlayerRect: function() {
+        var spriteRect = this.getBoundingBoxToWorld();
+        var spritePos = this.getPosition();
+
+        var dX = this.x - spritePos.x;
+        var dY = this.y - spritePos.y;
+        return cc.rect( spriteRect.x + dX,
+                        spriteRect.y + dY,
+                        spriteRect.width,
+                        spriteRect.height );
+    },
+    
     update: function() {
-        var oldRect = this.getBoundingBoxToWorld();
-        var oldX = this.x;
-        var oldY = this.y;
-        
+        var currentPositionRect = this.getPlayerRect();
+
         this.updateYMovement();
         this.updateXMovement();
 
-        var dX = this.x - oldX;
-        var dY = this.y - oldY;
-        
-        var newRect = cc.rect( oldRect.x + dX,
-                               oldRect.y + dY - 1,
-                               oldRect.width,
-                               oldRect.height + 1 );
+        var newPositionRect = this.getPlayerRect();
+        this.handleCollision( currentPositionRect,
+                              newPositionRect );
 
-        this.handleCollision( oldRect, newRect );
-        this.updatePosition();
+        this.updateSpritePosition();
     },
 
     updateXMovement: function() {
@@ -121,7 +126,9 @@ var Jumper = cc.Sprite.extend({
             }
         } else {
             if ( this.vy <= 0 ) {
-                var topBlock = this.findTopBlock( this.blocks, oldRect, newRect );
+                var topBlock = this.findTopBlock( this.blocks,
+                                                  oldRect,
+                                                  newRect );
                 
                 if ( topBlock ) {
                     this.ground = topBlock;

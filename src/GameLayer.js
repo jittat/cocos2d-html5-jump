@@ -10,7 +10,7 @@ var GameLayer = cc.LayerColor.extend({
         this.addChild( this.jumper );
         this.scheduleOnce(function() {
             this.jumper.scheduleUpdate();
-        }, 2);
+        }, 1);
         
         this.setKeyboardEnabled( true );
 
